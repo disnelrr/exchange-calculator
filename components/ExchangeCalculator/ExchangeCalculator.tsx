@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import { ArrowRightIcon } from "@chakra-ui/icons";
 
 const myHeaders = new Headers();
-myHeaders.append("apikey", process.env.NEXT_PUBLIC_API_KEY);
+myHeaders.append("apikey", `${process.env.NEXT_PUBLIC_API_KEY}`);
 
 const requestOptions = {
   method: "GET",
