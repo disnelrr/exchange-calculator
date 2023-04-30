@@ -7,15 +7,15 @@ import {
   Box,
   Button,
   HStack,
-  IconButton,
   Input,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { ArrowRightIcon } from "@chakra-ui/icons";
 
 const myHeaders = new Headers();
-myHeaders.append("apikey", "4bpDvyttu7FVyYM0kriwko2ETbwt2WOs");
+myHeaders.append("apikey", process.env.NEXT_PUBLIC_API_KEY);
 
 const requestOptions = {
   method: "GET",
@@ -39,6 +39,7 @@ const ExchangeCalculator = () => {
   const [toCurrency, setToCurrency] = useState("EUR");
   const [data, setData] = useState<string[]>([]);
   const [cache, setCache] = useState<CacheProps[]>([]);
+  const [lastCurChange, setLastCurChange] = useState(0)
 
   useEffect(() => {
     async function getCurrencies() {
@@ -52,10 +53,15 @@ const ExchangeCalculator = () => {
           setData(Object.entries(parsedData.symbols).map((entry) => entry[0]));
           setFromCurrency(data[0]);
           setToCurrency(data[0]);
+          setLastCurChange((new Date()).getTime())
         })
         .catch((error) => console.log("error", error));
     }
-    data.length === 0 && getCurrencies(); //also check last update
+    const now = new Date();
+    const lastChange = new Date(lastCurChange);
+    const diff = Math.abs(now - lastChange);
+
+    (data.length === 0 || diff > 86_400_000) && getCurrencies();
   });
 
   function calculateExchange() {
@@ -114,7 +120,6 @@ const ExchangeCalculator = () => {
                 }
               })
             );
-
           } else {
             setCache(
               cache.concat([
@@ -133,7 +138,7 @@ const ExchangeCalculator = () => {
     }
   }
   return (
-    <div className="lg:w-1/3 w-full lg:mx-auto lg:p-20 p-5 mt-10 border-2 border-black rounded-2xl">
+    <div className="lg:w-1/3 w-full lg:mx-auto lg:p-10 p-5 mt-10 border-2 border-black rounded-2xl">
       <Input
         placeholder="Enter the amount to convert"
         className="mb-5 text-right"
@@ -168,15 +173,22 @@ const ExchangeCalculator = () => {
         />
       </HStack>
       <HStack justify="space-between">
-        <Button
-          variant={"solid"}
-          colorScheme="blue"
-          onClick={calculateExchange}
-          isDisabled={loading || !fromCurrency || !toCurrency}
-          isLoading={loading}
+        <Tooltip
+          label="Select both currencies to make the conversion"
+          placement="auto"
+          isDisabled={fromCurrency && toCurrency}
         >
-          Convert
-        </Button>
+          <Button
+            variant={"solid"}
+            colorScheme="blue"
+            onClick={calculateExchange}
+            isDisabled={loading || !fromCurrency || !toCurrency}
+            isLoading={loading}
+            loadingText="Converting"
+          >
+            Convert
+          </Button>
+        </Tooltip>
         <Box>
           {loading ? (
             <>{`Converting ${fromCurrency} ${amount} to ${toCurrency} ...`}</>
