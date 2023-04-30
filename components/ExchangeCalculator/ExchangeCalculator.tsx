@@ -161,13 +161,11 @@ const ExchangeCalculator = () => {
 
       <HStack justify="space-between" className="mb-5">
         <CurrencySelect
-          currency={fromCurrency}
           setCurrency={setFromCurrency}
           currencies={data}
         />
         <ArrowRightIcon />
         <CurrencySelect
-          currency={toCurrency}
           setCurrency={setToCurrency}
           currencies={data}
         />
